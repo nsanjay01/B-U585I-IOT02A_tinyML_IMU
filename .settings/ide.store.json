@@ -1,0 +1,7 @@
+{
+  "board": "B-U585I-IOT02A",
+  "device": "STM32U585AII6Q",
+  "core": "Cortex-M33",
+  "order": 0,
+  "toolchain": "GCC"
+}

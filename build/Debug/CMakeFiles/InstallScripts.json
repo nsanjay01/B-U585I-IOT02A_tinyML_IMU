@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/cmake_install.cmake",
+		"/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/cmake/stm32cubemx/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

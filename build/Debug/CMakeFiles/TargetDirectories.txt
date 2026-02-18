@@ -1,0 +1,6 @@
+/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/CMakeFiles/B-U585I-IOT02A_tinyML_IMU.dir
+/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/CMakeFiles/edit_cache.dir
+/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/CMakeFiles/rebuild_cache.dir
+/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir
+/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+/home/wyld_linux/Documents/Tinyml/B-U585I-IOT02A_tinyML_IMU/build/Debug/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

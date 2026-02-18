@@ -53,3 +53,22 @@ dkms.conf
 
 # debug information files
 *.dwo
+build
+mx.scratch
+!.settings
+
+# Build directories
+build/
+bin/
+obj/
+
+# Secure/Non-Secure build specific
+Secure/build/
+NonSecure/build/
+
+# IDE files
+.project
+.cproject
+.settings/
+.vscode/cmake-kits.json
+.vscode/launch.json
