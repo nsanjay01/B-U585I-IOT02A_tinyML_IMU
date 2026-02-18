@@ -62,10 +62,6 @@ build/
 bin/
 obj/
 
-# Secure/Non-Secure build specific
-Secure/build/
-NonSecure/build/
-
 # IDE files
 .project
 .cproject
