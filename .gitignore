@@ -1,23 +1,27 @@
-build
-mx.scratch
-!.settings
-
-## 3. The Importance of `.gitignore`
-Before you `git push`, make sure you don't upload the massive build folders. Create a file named `.gitignore` in the root:
-
-```text
-# Build directories
+# --- STM32 & Build Outputs ---
 build/
 bin/
 obj/
+*.elf
+*.bin
+*.map
+*.hex
+*.list
 
-# Secure/Non-Secure build specific
-Secure/build/
-NonSecure/build/
+# --- STM32CubeMX Files ---
+mx.scratch
+*.launch
 
-# IDE files
+# --- IDE & Tooling ---
+.settings/
 .project
 .cproject
-.settings/
-.vscode/cmake-kits.json
-.vscode/launch.json
+.vscode/
+.clangd/
+compile_commands.json
+cmake-build-debug/
+cmake-build-release/
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
