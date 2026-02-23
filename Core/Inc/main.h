@@ -40,6 +40,9 @@ extern "C" {
 #include "stm32u5xx_ll_dma.h"
 
 #include "stm32u5xx_ll_exti.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -63,6 +66,7 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
+void UART_Printf(const char* fmt, ...);
 
 /* USER CODE BEGIN EFP */
 

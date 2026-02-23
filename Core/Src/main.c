@@ -27,6 +27,7 @@
 #include "ucpd.h"
 #include "usb_otg.h"
 #include "gpio.h"
+#include "b_u585i_iot02a_motion_sensors.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,7 +46,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+extern UART_HandleTypeDef huart1;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -109,16 +110,41 @@ int main(void)
   MX_USART1_UART_Init();
   MX_UCPD1_Init();
   MX_USB_OTG_FS_PCD_Init();
+
+  BSP_MOTION_SENSOR_Init(0,0 );
+  MOTION_SENSOR_Capabilities_t Capabilities;
+  BSP_MOTION_SENSOR_GetCapabilities(0,&Capabilities);
   /* USER CODE BEGIN 2 */
-
+  UART_Printf("Initializing Sensors...\r\n");
+  if (BSP_MOTION_SENSOR_Init(0, MOTION_ACCELERO | MOTION_GYRO) != BSP_ERROR_NONE) {
+      UART_Printf("Sensor Init Failed!\r\n");
+      while(1); // Halt
+      }
   /* USER CODE END 2 */
+  BSP_MOTION_SENSOR_Enable(0, MOTION_ACCELERO);
+  BSP_MOTION_SENSOR_Enable(0, MOTION_GYRO);
+    
+  UART_Printf("Success! Reading Data...\r\n\r\n");
 
+  BSP_MOTION_SENSOR_Axes_t acc;
+  BSP_MOTION_SENSOR_Axes_t gyro;
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
+  if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &acc) == BSP_ERROR_NONE) {
+            UART_Printf("ACC [mg]: X:%ld Y:%ld Z:%ld\r\n", acc.xval, acc.yval, acc.zval);
+        }
 
+        // Read Gyroscope
+        if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &gyro) == BSP_ERROR_NONE) {
+            UART_Printf("GYRO [mdps]: X:%ld Y:%ld Z:%ld\r\n", gyro.xval, gyro.yval, gyro.zval);
+        }
+
+        UART_Printf("----------------------------\r\n");
+        
+        HAL_Delay(500);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -202,7 +228,14 @@ static void SystemPower_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void UART_Printf(const char* fmt, ...) {
+    char buf[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    HAL_UART_Transmit(&huart1, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
+}
 /* USER CODE END 4 */
 
 /**
