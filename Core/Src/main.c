@@ -111,9 +111,6 @@ int main(void)
   MX_UCPD1_Init();
   MX_USB_OTG_FS_PCD_Init();
 
-  BSP_MOTION_SENSOR_Init(0,0 );
-  MOTION_SENSOR_Capabilities_t Capabilities;
-  BSP_MOTION_SENSOR_GetCapabilities(0,&Capabilities);
   /* USER CODE BEGIN 2 */
   UART_Printf("Initializing Sensors...\r\n");
   if (BSP_MOTION_SENSOR_Init(0, MOTION_ACCELERO | MOTION_GYRO) != BSP_ERROR_NONE) {
