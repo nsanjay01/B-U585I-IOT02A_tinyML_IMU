@@ -27,11 +27,11 @@
 #include "ucpd.h"
 #include "usb_otg.h"
 #include "gpio.h"
-#include "b_u585i_iot02a_motion_sensors.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "b_u585i_iot02a_motion_sensors.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,13 +46,13 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-extern UART_HandleTypeDef huart1;
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+extern UART_HandleTypeDef huart1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -117,20 +117,21 @@ int main(void)
       UART_Printf("Sensor Init Failed!\r\n");
       while(1); // Halt
       }
-  /* USER CODE END 2 */
+  
   BSP_MOTION_SENSOR_Enable(0, MOTION_ACCELERO);
   BSP_MOTION_SENSOR_Enable(0, MOTION_GYRO);
-    
   UART_Printf("Success! Reading Data...\r\n\r\n");
-
   BSP_MOTION_SENSOR_Axes_t acc;
   BSP_MOTION_SENSOR_Axes_t gyro;
+  /* USER CODE END 2 */
+
+
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-  if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &acc) == BSP_ERROR_NONE) {
+      if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &acc) == BSP_ERROR_NONE) {
             UART_Printf("ACC [mg]: X:%ld Y:%ld Z:%ld\r\n", acc.xval, acc.yval, acc.zval);
         }
 
@@ -142,6 +143,8 @@ int main(void)
         UART_Printf("----------------------------\r\n");
         
         HAL_Delay(500);
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
