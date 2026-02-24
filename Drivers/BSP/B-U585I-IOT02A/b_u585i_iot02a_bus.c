@@ -689,8 +689,8 @@ int32_t BSP_I2C2_Init(void)
       }
       if (ret == BSP_ERROR_NONE)
       {
-#endif /* USE_HAL_I2C_REGISTER_CALLBACKS */
-      if (MX_I2C2_Init(&hbus_i2c2, I2C_GetTiming(HAL_RCC_GetPCLK1Freq(), BUS_I2C2_FREQUENCY)) != HAL_OK)
+#endif /* USE_HAL_I2C_REGISTER_CALLBACKS    I2C_GetTiming(HAL_RCC_GetPCLK1Freq(), BUS_I2C2_FREQUENCY)) */
+      if (MX_I2C2_Init(&hbus_i2c2, 0 != HAL_OK))
       {
         ret = BSP_ERROR_BUS_FAILURE;
       }
@@ -737,8 +737,8 @@ int32_t BSP_I2C2_DeInit(void)
 __weak HAL_StatusTypeDef MX_I2C2_Init(I2C_HandleTypeDef *hI2c, uint32_t timing)
 {
   HAL_StatusTypeDef status = HAL_OK;
-
-  hI2c->Init.Timing           = timing;
+  hI2c->Instance = I2C2;
+  hI2c->Init.Timing           = 0x00F07BFF;
   hI2c->Init.OwnAddress1      = 0;
   hI2c->Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
   hI2c->Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
@@ -1473,10 +1473,12 @@ static int32_t I2C1_Send(uint16_t DevAddr, uint8_t *pData, uint16_t Length)
 static void I2C2_MspInit(const I2C_HandleTypeDef *hI2c)
 {
   GPIO_InitTypeDef  gpio_init_structure;
-
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
   /* Prevent unused argument(s) compilation warning */
   UNUSED(hI2c);
-
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C2;
+  PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
+  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
   /*** Configure the GPIOs ***/
   /* Enable SCL GPIO clock */
   BUS_I2C2_SCL_GPIO_CLK_ENABLE();
@@ -1487,7 +1489,7 @@ static void I2C2_MspInit(const I2C_HandleTypeDef *hI2c)
   gpio_init_structure.Pin     = BUS_I2C2_SCL_PIN;
   gpio_init_structure.Mode    = GPIO_MODE_AF_OD;
   gpio_init_structure.Pull    = GPIO_PULLUP;
-  gpio_init_structure.Speed             = GPIO_SPEED_FREQ_HIGH;
+  gpio_init_structure.Speed             = GPIO_SPEED_FREQ_LOW;
   gpio_init_structure.Alternate         = BUS_I2C2_SCL_AF;
   HAL_GPIO_Init(BUS_I2C2_SCL_GPIO_PORT, &gpio_init_structure);
 
@@ -1495,7 +1497,7 @@ static void I2C2_MspInit(const I2C_HandleTypeDef *hI2c)
   gpio_init_structure.Pin     = BUS_I2C2_SDA_PIN;
   gpio_init_structure.Mode    = GPIO_MODE_AF_OD;
   gpio_init_structure.Pull    = GPIO_PULLUP;
-  gpio_init_structure.Speed             = GPIO_SPEED_FREQ_HIGH;
+  gpio_init_structure.Speed             = GPIO_SPEED_FREQ_LOW;
   gpio_init_structure.Alternate         = BUS_I2C2_SDA_AF;
   HAL_GPIO_Init(BUS_I2C2_SDA_GPIO_PORT, &gpio_init_structure);
 
@@ -1504,10 +1506,10 @@ static void I2C2_MspInit(const I2C_HandleTypeDef *hI2c)
   BUS_I2C2_CLK_ENABLE();
 
   /* Force the I2C peripheral clock reset */
-  BUS_I2C2_FORCE_RESET();
+  // BUS_I2C2_FORCE_RESET();
 
   /* Release the I2C peripheral clock reset */
-  BUS_I2C2_RELEASE_RESET();
+  // BUS_I2C2_RELEASE_RESET();
 }
 
 /**

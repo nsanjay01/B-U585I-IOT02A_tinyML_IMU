@@ -48,6 +48,7 @@ extern "C" {
 /* COM define */
 #define USE_BSP_COM_FEATURE                  0U
 #define USE_COM_LOG                          0U
+#define USE_BSP_MOTION_SENSOR 1U
 
 /* Default EEPROM max trials */
 #define EEPROM_MAX_TRIALS                   3000U

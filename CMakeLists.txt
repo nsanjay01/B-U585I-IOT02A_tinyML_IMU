@@ -61,7 +61,7 @@ file(GLOB_RECURSE TFLM_SOURCES
       "Third_Party/LiteRT/tensorflow/*.cc"
       "Third_Party/LiteRT/third_party/*.c" "Third_Party/LiteRT/third_party/*.cc"
       "Drivers/BSP/Components/ism330dhcx/*.c"
-      "Drivers/BSP/Components/iis2mdc/*c")
+      "Drivers/BSP/Components/iis2mdc/*.c")
 
 list(REMOVE_ITEM TFLM_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/Third_Party/LiteRT/tensorflow/lite/micro/debug_log.cc"

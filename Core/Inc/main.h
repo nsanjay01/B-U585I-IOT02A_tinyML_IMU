@@ -189,8 +189,6 @@ void UART_Printf_DMA(const char* fmt, ...);
 #define USB_UCPD_CC2_GPIO_Port GPIOB
 #define Mems_STSAFE_RESET_Pin GPIO_PIN_11
 #define Mems_STSAFE_RESET_GPIO_Port GPIOF
-#define Mems_ISM330DLC_INT1_Pin GPIO_PIN_11
-#define Mems_ISM330DLC_INT1_GPIO_Port GPIOE
 #define MIC_SDIN0_Pin GPIO_PIN_1
 #define MIC_SDIN0_GPIO_Port GPIOB
 #define WRLS_WKUP_W_Pin GPIO_PIN_15

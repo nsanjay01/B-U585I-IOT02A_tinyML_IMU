@@ -24,6 +24,7 @@
 #include "icache.h"
 #include "octospi.h"
 #include "spi.h"
+#include "stm32u5xx_hal.h"
 #include "usart.h"
 #include "ucpd.h"
 #include "usb_otg.h"
@@ -33,6 +34,10 @@
 /* USER CODE BEGIN Includes */
 #include "b_u585i_iot02a_motion_sensors.h"
 #include "tensorflow/lite/micro/debug_log.h"
+#include "b_u585i_iot02a_bus.h"
+#include "b_u585i_iot02a_errno.h"
+#include "ism330dhcx.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,6 +48,10 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define TX_BUF_SIZE 2048  // 2KB buffer for logs
+ISM330DHCX_Object_t MotionSensor;
+ISM330DHCX_Axes_t acc_axes;
+//Data reception Indicator
+volatile uint32_t dataRdyIntReceived;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,9 +64,10 @@
 /* USER CODE BEGIN PV */
 extern UART_HandleTypeDef huart1;
 uint8_t ring_buffer[TX_BUF_SIZE];
-uint32_t head = 0; // Where CPU writes
-uint32_t tail = 0; // Where DMA reads
-bool dma_busy = false;
+volatile uint32_t head = 0; // Where CPU writes
+volatile uint32_t tail = 0; // Where DMA reads
+volatile bool dma_busy = false;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,12 +75,41 @@ void SystemClock_Config(void);
 static void SystemPower_Config(void);
 /* USER CODE BEGIN PFP */
 extern void DebugLog(const char* format, va_list args);
+static void MEMS_Init(void);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+static void MEMS_Init(void)
+{
+      ISM330DHCX_IO_t io_ctx;
+      uint8_t id;
+      ISM330DHCX_AxesRaw_t axes;
+      /* Link I2C functions to the ISM330DHCX driver */
+      io_ctx.BusType     = ISM330DHCX_I2C_BUS;
+      io_ctx.Address     = ISM330DHCX_I2C_ADD_H;
+      io_ctx.Init        = BSP_I2C2_Init;
+      io_ctx.DeInit      = BSP_I2C2_DeInit;
+      io_ctx.ReadReg     = BSP_I2C2_ReadReg;
+      io_ctx.WriteReg    = BSP_I2C2_WriteReg;
+      io_ctx.GetTick     = BSP_GetTick;
+      ISM330DHCX_RegisterBusIO(&MotionSensor, &io_ctx);
+      /* Read the ISM330DHCX WHO_AM_I register */
+      ISM330DHCX_ReadID(&MotionSensor, &id);
+      if (id != ISM330DHCX_ID) {
+             Error_Handler();
+      }
+      /* Initialize the ISM330DHCX sensor */
+      ISM330DHCX_Init(&MotionSensor);
+      /* Configure the ISM330DHCX accelerometer (ODR, scale and interrupt) */
+      ISM330DHCX_ACC_SetOutputDataRate(&MotionSensor, 26.0f); /* 26 Hz */
+      ISM330DHCX_ACC_SetFullScale(&MotionSensor, 4);     /* [-4000mg; +4000mg] */
+      ISM330DHCX_Set_INT1_Drdy(&MotionSensor, ENABLE);   /* Enable DRDY */
+      ISM330DHCX_ACC_GetAxesRaw(&MotionSensor, &axes);   /* Clear DRDY */
+      /* Start the ISM330DHCX accelerometer */
+      ISM330DHCX_ACC_Enable(&MotionSensor);
+}
 /* USER CODE END 0 */
 
 /**
@@ -107,49 +146,33 @@ int main(void)
   MX_GPIO_Init();
   MX_GPDMA1_Init();
   MX_ADF1_Init();
-  MX_I2C1_Init();
-  MX_I2C2_Init();
+  // MX_I2C1_Init();
+  // MX_I2C2_Init();
   MX_ICACHE_Init();
-  MX_OCTOSPI1_Init();
-  MX_OCTOSPI2_Init();
-  MX_SPI2_Init();
-  MX_UART4_Init();
+  // MX_OCTOSPI1_Init();
+  // MX_OCTOSPI2_Init();
+  // MX_SPI2_Init();
+  // MX_UART4_Init();
   MX_USART1_UART_Init();
-  MX_USB_OTG_FS_PCD_Init();
-  MX_UCPD1_Init();
+  // MX_USB_OTG_FS_PCD_Init();
+  // MX_UCPD1_Init();
   /* USER CODE BEGIN 2 */
+  dataRdyIntReceived = 0;
   UART_Printf_DMA("Initializing Sensors...\r\n");
-  if (BSP_MOTION_SENSOR_Init(0, MOTION_ACCELERO | MOTION_GYRO) != BSP_ERROR_NONE) {
-      UART_Printf_DMA("Sensor Init Failed!\r\n");
-      while(1); // Halt
-      }
-  
-  BSP_MOTION_SENSOR_Enable(0, MOTION_ACCELERO);
-  BSP_MOTION_SENSOR_Enable(0, MOTION_GYRO);
-  UART_Printf_DMA("Success! Reading Data...\r\n\r\n");
-  BSP_MOTION_SENSOR_Axes_t acc;
-  BSP_MOTION_SENSOR_Axes_t gyro;
+  MEMS_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &acc) == BSP_ERROR_NONE) {
-            UART_Printf_DMA("ACC [mg]: X:%ld Y:%ld Z:%ld\r\n", acc.xval, acc.yval, acc.zval);
-        }
-
-        // Read Gyroscope
-        if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &gyro) == BSP_ERROR_NONE) {
-            UART_Printf_DMA("GYRO [mdps]: X:%ld Y:%ld Z:%ld\r\n", gyro.xval, gyro.yval, gyro.zval);
-        }
-
-        UART_Printf_DMA("----------------------------\r\n");
-        
-        HAL_Delay(500);
+      
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    ISM330DHCX_ACC_GetAxes(&MotionSensor, &acc_axes);
+    UART_Printf_DMA("X = %5d, Y =  %5d,  Z = %5d\r\n",  (int) acc_axes.x, (int) acc_axes.y, (int) acc_axes.z);
+    HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
@@ -232,6 +255,11 @@ static void SystemPower_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == GPIO_PIN_11)
+    dataRdyIntReceived++;
+}
 
 void UART_Printf_DMA(const char* fmt, ...) {
     va_list args;

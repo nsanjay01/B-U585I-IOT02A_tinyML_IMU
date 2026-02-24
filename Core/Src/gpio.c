@@ -122,11 +122,11 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USB_UCPD_FLT_Pin Mems_ISM330DLC_INT1_Pin */
-  GPIO_InitStruct.Pin = USB_UCPD_FLT_Pin|Mems_ISM330DLC_INT1_Pin;
+  /*Configure GPIO pin : USB_UCPD_FLT_Pin */
+  GPIO_InitStruct.Pin = USB_UCPD_FLT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+  HAL_GPIO_Init(USB_UCPD_FLT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USB_VBUS_SENSE_Pin */
   GPIO_InitStruct.Pin = USB_VBUS_SENSE_Pin;
@@ -141,6 +141,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PE11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
   /*Configure GPIO pin : MIC_SDIN0_Pin */
   GPIO_InitStruct.Pin = MIC_SDIN0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -148,6 +154,10 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF6_MDF1;
   HAL_GPIO_Init(MIC_SDIN0_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI11_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI11_IRQn);
 
 }
 
