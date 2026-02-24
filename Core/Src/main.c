@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "mdf.h"
+#include "gpdma.h"
 #include "i2c.h"
 #include "icache.h"
 #include "octospi.h"
@@ -28,10 +29,10 @@
 #include "usb_otg.h"
 #include "gpio.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "b_u585i_iot02a_motion_sensors.h"
+#include "tensorflow/lite/micro/debug_log.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,7 +42,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define TX_BUF_SIZE 2048  // 2KB buffer for logs
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -53,12 +54,17 @@
 
 /* USER CODE BEGIN PV */
 extern UART_HandleTypeDef huart1;
+uint8_t ring_buffer[TX_BUF_SIZE];
+uint32_t head = 0; // Where CPU writes
+uint32_t tail = 0; // Where DMA reads
+bool dma_busy = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void SystemPower_Config(void);
 /* USER CODE BEGIN PFP */
+extern void DebugLog(const char* format, va_list args);
 
 /* USER CODE END PFP */
 
@@ -99,6 +105,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_GPDMA1_Init();
   MX_ADF1_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
@@ -108,39 +115,36 @@ int main(void)
   MX_SPI2_Init();
   MX_UART4_Init();
   MX_USART1_UART_Init();
-  MX_UCPD1_Init();
   MX_USB_OTG_FS_PCD_Init();
-
+  MX_UCPD1_Init();
   /* USER CODE BEGIN 2 */
-  UART_Printf("Initializing Sensors...\r\n");
+  UART_Printf_DMA("Initializing Sensors...\r\n");
   if (BSP_MOTION_SENSOR_Init(0, MOTION_ACCELERO | MOTION_GYRO) != BSP_ERROR_NONE) {
-      UART_Printf("Sensor Init Failed!\r\n");
+      UART_Printf_DMA("Sensor Init Failed!\r\n");
       while(1); // Halt
       }
   
   BSP_MOTION_SENSOR_Enable(0, MOTION_ACCELERO);
   BSP_MOTION_SENSOR_Enable(0, MOTION_GYRO);
-  UART_Printf("Success! Reading Data...\r\n\r\n");
+  UART_Printf_DMA("Success! Reading Data...\r\n\r\n");
   BSP_MOTION_SENSOR_Axes_t acc;
   BSP_MOTION_SENSOR_Axes_t gyro;
   /* USER CODE END 2 */
-
-
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
       if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &acc) == BSP_ERROR_NONE) {
-            UART_Printf("ACC [mg]: X:%ld Y:%ld Z:%ld\r\n", acc.xval, acc.yval, acc.zval);
+            UART_Printf_DMA("ACC [mg]: X:%ld Y:%ld Z:%ld\r\n", acc.xval, acc.yval, acc.zval);
         }
 
         // Read Gyroscope
         if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &gyro) == BSP_ERROR_NONE) {
-            UART_Printf("GYRO [mdps]: X:%ld Y:%ld Z:%ld\r\n", gyro.xval, gyro.yval, gyro.zval);
+            UART_Printf_DMA("GYRO [mdps]: X:%ld Y:%ld Z:%ld\r\n", gyro.xval, gyro.yval, gyro.zval);
         }
 
-        UART_Printf("----------------------------\r\n");
+        UART_Printf_DMA("----------------------------\r\n");
         
         HAL_Delay(500);
     /* USER CODE END WHILE */
@@ -228,13 +232,35 @@ static void SystemPower_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void UART_Printf(const char* fmt, ...) {
-    char buf[256];
+
+void UART_Printf_DMA(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, args);
+    // This is a trick: we just call DebugLog because it already has the 
+    // ring buffer logic built in! 
+    DebugLog(fmt, args);
     va_end(args);
-    HAL_UART_Transmit(&huart1, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY);
+}
+
+
+/**
+ * @brief This runs automatically when the DMA finishes a transfer
+ */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART1) {
+        // Update tail based on what we just sent
+        uint32_t last_sent = huart->TxXferSize;
+        tail = (tail + last_sent) % TX_BUF_SIZE;
+
+        if (head != tail) {
+            // There is more data waiting in the buffer!
+            uint32_t send_size = (head > tail) ? (head - tail) : (TX_BUF_SIZE - tail);
+            HAL_UART_Transmit_DMA(&huart1, &ring_buffer[tail], send_size);
+        } else {
+            // Buffer is empty, we are done for now
+            dma_busy = false;
+        }
+    }
 }
 /* USER CODE END 4 */
 

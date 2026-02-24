@@ -57,16 +57,16 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 )
 
 file(GLOB_RECURSE TFLM_SOURCES
-      "Middlewares/LiteRT/signal/*.cc" "Middlewares/LiteRT/signal/*.c"
-      "Middlewares/LiteRT/tensorflow/*.cc"
-      "Middlewares/LiteRT/third_party/*.c" "Middlewares/LiteRT/third_party/*.cc"
+      "Third_Party/LiteRT/signal/*.cc" "Third_Party/LiteRT/signal/*.c"
+      "Third_Party/LiteRT/tensorflow/*.cc"
+      "Third_Party/LiteRT/third_party/*.c" "Third_Party/LiteRT/third_party/*.cc"
       "Drivers/BSP/Components/ism330dhcx/*.c"
       "Drivers/BSP/Components/iis2mdc/*c")
 
 list(REMOVE_ITEM TFLM_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/LiteRT/tensorflow/lite/micro/debug_log.cc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/LiteRT/tensorflow/lite/micro/micro_time.cc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/LiteRT/tensorflow/lite/micro/system_setup.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Third_Party/LiteRT/tensorflow/lite/micro/debug_log.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Third_Party/LiteRT/tensorflow/lite/micro/micro_time.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Third_Party/LiteRT/tensorflow/lite/micro/system_setup.cc"
     
 )
 
@@ -88,14 +88,14 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
     Core/Inc
     # Go UP one level from 'Secure' to find 'Middleware'
-    Middlewares/LiteRT
-    Middlewares/LiteRT/third_party/flatbuffers/include
-    Middlewares/LiteRT/third_party/gemmlowp
-    Middlewares/LiteRT/third_party/kissfft
-    Middlewares/LiteRT/third_party/ruy
-    Middlewares/LiteRT/signal/src
-    Middlewares/LiteRT/signal/src/kiss_fft_wrappers
-    Middlewares/LiteRT/signal/micro
+    Third_Party/LiteRT
+    Third_Party/LiteRT/third_party/flatbuffers/include
+    Third_Party/LiteRT/third_party/gemmlowp
+    Third_Party/LiteRT/third_party/kissfft
+    Third_Party/LiteRT/third_party/ruy
+    Third_Party/LiteRT/signal/src
+    Third_Party/LiteRT/signal/src/kiss_fft_wrappers
+    Third_Party/LiteRT/signal/micro
     Drivers/BSP/Components/ism330dhcx
     Drivers/BSP/B-U585I-IOT02A
     Drivers/BSP/Components/Common
