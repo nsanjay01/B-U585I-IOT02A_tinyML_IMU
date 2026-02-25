@@ -50,6 +50,7 @@
 #define TX_BUF_SIZE 2048  // 2KB buffer for logs
 ISM330DHCX_Object_t MotionSensor;
 ISM330DHCX_Axes_t acc_axes;
+ISM330DHCX_Axes_t gyro_axes;
 //Data reception Indicator
 volatile uint32_t dataRdyIntReceived;
 /* USER CODE END PD */
@@ -109,6 +110,10 @@ static void MEMS_Init(void)
       ISM330DHCX_ACC_GetAxesRaw(&MotionSensor, &axes);   /* Clear DRDY */
       /* Start the ISM330DHCX accelerometer */
       ISM330DHCX_ACC_Enable(&MotionSensor);
+      /* Start the ISM330DHCX Gyroscope */
+      ISM330DHCX_GYRO_SetOutputDataRate(&MotionSensor, 26.0f); 
+      ISM330DHCX_GYRO_SetFullScale(&MotionSensor, 2000); // 2000 dps
+      ISM330DHCX_GYRO_Enable(&MotionSensor);
 }
 /* USER CODE END 0 */
 
@@ -170,9 +175,27 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    ISM330DHCX_ACC_GetAxes(&MotionSensor, &acc_axes);
-    UART_Printf_DMA("X = %5d, Y =  %5d,  Z = %5d\r\n",  (int) acc_axes.x, (int) acc_axes.y, (int) acc_axes.z);
-    HAL_Delay(50);
+    if (dataRdyIntReceived > 0) 
+    {
+      // Reset the flag immediately
+      dataRdyIntReceived = 0;
+
+      // 1. Get Accelerometer Data
+      ISM330DHCX_ACC_GetAxes(&MotionSensor, &acc_axes);
+      ISM330DHCX_GYRO_GetAxes(&MotionSensor, &gyro_axes);
+      
+      // 2. (Optional) Get Gyroscope Data if you enabled it
+      // ISM330DHCX_GYRO_GetAxes(&MotionSensor, &gyro_axes);
+
+      // 3. Print the data
+      UART_Printf_DMA("ACC: %5d, %5d, %5d | GYRO: %5d, %5d, %5d\r\n", 
+               (int)acc_axes.x, (int)acc_axes.y, (int)acc_axes.z,
+               (int)gyro_axes.x, (int)gyro_axes.y, (int)gyro_axes.z);
+      
+      /* NOTE: No HAL_Delay here! 
+         The timing is now controlled by the Sensor's ODR (26Hz).
+      */
+    }
   }
   /* USER CODE END 3 */
 }
