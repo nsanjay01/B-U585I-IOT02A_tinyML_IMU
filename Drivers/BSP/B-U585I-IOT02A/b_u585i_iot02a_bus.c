@@ -690,7 +690,7 @@ int32_t BSP_I2C2_Init(void)
       if (ret == BSP_ERROR_NONE)
       {
 #endif /* USE_HAL_I2C_REGISTER_CALLBACKS    I2C_GetTiming(HAL_RCC_GetPCLK1Freq(), BUS_I2C2_FREQUENCY)) */
-      if (MX_I2C2_Init(&hbus_i2c2, 0 != HAL_OK))
+      if (MX_I2C2_Init(&hbus_i2c2, I2C_GetTiming(HAL_RCC_GetPCLK1Freq(), BUS_I2C2_FREQUENCY)) != HAL_OK)
       {
         ret = BSP_ERROR_BUS_FAILURE;
       }

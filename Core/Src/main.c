@@ -37,6 +37,8 @@
 #include "b_u585i_iot02a_bus.h"
 #include "b_u585i_iot02a_errno.h"
 #include "ism330dhcx.h"
+#include "app_main.h"
+
 
 /* USER CODE END Includes */
 
@@ -48,6 +50,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define TX_BUF_SIZE 2048  // 2KB buffer for logs
+#define THRESHOLD 0.052006
 ISM330DHCX_Object_t MotionSensor;
 ISM330DHCX_Axes_t acc_axes;
 ISM330DHCX_Axes_t gyro_axes;
@@ -68,6 +71,8 @@ uint8_t ring_buffer[TX_BUF_SIZE];
 volatile uint32_t head = 0; // Where CPU writes
 volatile uint32_t tail = 0; // Where DMA reads
 volatile bool dma_busy = false;
+float sensor_buffer[150]; // 25 * 6
+int sample_idx = 0;
 
 /* USER CODE END PV */
 
@@ -165,11 +170,17 @@ int main(void)
   dataRdyIntReceived = 0;
   UART_Printf_DMA("Initializing Sensors...\r\n");
   MEMS_Init();
+  UART_Printf_DMA("Initializing AI Model...\r\n");
+  AI_Init();
+  UART_Printf_DMA("Initialized AI Model...\r\n");
+
+  int anomaly_counter = 0;
+  const int ANOMALY_TRIGGER_LIMIT = 3;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+ while (1)
   {
       
     /* USER CODE END WHILE */
@@ -187,17 +198,57 @@ int main(void)
       // 2. (Optional) Get Gyroscope Data if you enabled it
       // ISM330DHCX_GYRO_GetAxes(&MotionSensor, &gyro_axes);
 
-      UART_Printf_DMA("%d,%d,%d,%d,%d,%d\r\n", 
-               (int)acc_axes.x, (int)acc_axes.y, (int)acc_axes.z, 
-               (int)gyro_axes.x, (int)gyro_axes.y, (int)gyro_axes.z);
+
+        sensor_buffer[sample_idx * 6 + 0] = acc_axes.x / 1000.0f;
+        sensor_buffer[sample_idx * 6 + 1] = acc_axes.y / 1000.0f;
+        sensor_buffer[sample_idx * 6 + 2] = acc_axes.z / 1000.0f;
+        sensor_buffer[sample_idx * 6 + 3] = (gyro_axes.x / 1000.0f) / 250.0f;
+        sensor_buffer[sample_idx * 6 + 4] = (gyro_axes.y / 1000.0f) / 250.0f;
+        sensor_buffer[sample_idx * 6 + 5] = (gyro_axes.z / 1000.0f) / 250.0f;
+        sample_idx++;
+        // 2. When window is full, run AI
+        if (sample_idx >= 25) {
+            float score = Run_Inference(sensor_buffer);
+            // Convert float to two integers (e.g., 0.0123 -> 0 and 123)
+            int int_part = (int)score;
+            int dec_part = (int)((score - int_part) * 1000);
+
+            // We use %d which is ALWAYS supported
+            UART_Printf_DMA("SCORE: %d.%03d | LIMIT: 0.054 | Counter: %d\r\n", 
+                            int_part, dec_part, anomaly_counter);
+            
+            if (score > THRESHOLD) {
+                    anomaly_counter++;
+                } else {
+                    // Slowly decay the counter rather than resetting to 0 
+                    // This helps catch "pulsing" anomalies
+                    if (anomaly_counter > 0) anomaly_counter--;
+                }
+
+                // 3. LED Control
+               if (anomaly_counter >= ANOMALY_TRIGGER_LIMIT) {
+                    // ANOMALY DETECTED: Turn the LED ON (3.3V)
+                    HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_RESET); 
+                    UART_Printf_DMA("Anomaly Detected! Score: \r\n");
+                } else {
+                    // NORMAL OPERATION: Turn the LED OFF (0V)
+                    HAL_GPIO_WritePin(LED_RED_GPIO_Port, LED_RED_Pin, GPIO_PIN_SET);
+                    UART_Printf_DMA("Normal Operation\r\n");
+                }
+            
+            sample_idx = 0; // Reset buffer
+        }
+      // UART_Printf_DMA("%d,%d,%d,%d,%d,%d\r\n", 
+      //          (int)acc_axes.x, (int)acc_axes.y, (int)acc_axes.z, 
+      //          (int)gyro_axes.x, (int)gyro_axes.y, (int)gyro_axes.z);
       
       /* NOTE: No HAL_Delay here! 
-         The timing is now controlled by the Sensor's ODR (26Hz).
+         The timing is now controlled by the Sensor's ODR (52Hz).
       */
     }
   }
   /* USER CODE END 3 */
-}
+} 
 
 /**
   * @brief System Clock Configuration

@@ -30,7 +30,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 
 # Compiler options
-set(STM32_MCU_FLAGS  "-mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mcmse " )
+set(STM32_MCU_FLAGS -mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mcmse)
+
 
 # Core project settings
 project(${CMAKE_PROJECT_NAME})
@@ -56,6 +57,7 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     CMSIS_NN
 )
 
+
 file(GLOB_RECURSE TFLM_SOURCES
       "Third_Party/LiteRT/signal/*.cc" "Third_Party/LiteRT/signal/*.c"
       "Third_Party/LiteRT/tensorflow/*.cc"
@@ -80,6 +82,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_bus.c
     Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c
     Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c
+    Core/Src/model.cc
     ${TFLM_SOURCES}
 )
 
@@ -116,3 +119,11 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 
     # Add user defined libraries
 )
+
+# # Compiler options
+# set(STM32_MCU_FLAGS  "-mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mcmse " )
+# # Add the MCU flags to the compile options
+# target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE ${STM32_MCU_FLAGS})
+
+# # Add the MCU flags to the linker options (essential for hard-float linking)
+# target_link_options(${CMAKE_PROJECT_NAME} PRIVATE ${STM32_MCU_FLAGS})
