@@ -79,32 +79,32 @@ SCORE: 0.138 | LIMIT: 0.054 | Counter: 5
 Anomaly Detected! Score: 
 SCORE: 0.218 | LIMIT: 0.054 | Counter: 6
 ```
-### Future Work & Roadmap
+## Future Work & Roadmap
 Now that the core LSTM Autoencoder is stable, the following features are planned for the next iteration of this "Behavioral Guarddog":
-1. **Multi-Modal Anomaly Detection**:
+### 1. **Multi-Modal Anomaly Detection**:
 The B-U585I-IOT02A features an onboard MP23DB01HP digital microphone.
 
 * **Goal**: Use a 1D-CNN or Spectrogram-based model to detect acoustic anomalies (e.g., the sound of glass breaking or a motor grinding) alongside the IMU data.
 
 * **Benefit**: Higher confidence in anomaly detection by fusing motion and sound data.
 
-2. **BLE Alert System (ST-BLE-Sensor)**:
+### 2. **BLE Alert System (ST-BLE-Sensor)**:
 Integrating the onboard BlueNRG-M2 module.
 
 * **Goal**: Instead of just a Red LED, the system will send a Bluetooth Low Energy (BLE) notification to a smartphone or gateway when an anomaly is detected.
 
 * **Benefit**: Real-world utility for remote monitoring of elderly patients or industrial machines.
 
-3. **Low-Power Optimization (ULP)**:
+### 3. **Low-Power Optimization (ULP)**:
 The STM32U5 series is designed for Ultra-Low Power.
 * **Goal**: Use the Low Power Background Autonomous Mode (LPBAM) to collect sensor data while the main CPU is in STOP mode.
 
 * **Benefit**: Extending battery life from days to months on a single LiPo cell.
 
-4. **On-Device Personalization**:
+### 4. **On-Device Personalization**:
 * **Goal**: Implement a "Calibration Mode" where the user can record 10 seconds of their specific "normal" movement to recalculate the `THRESHOLD` locally without needing a PC.
 
-### Acknowledgements
+## Acknowledgements
 * [UCI Machine Learning Repository: HAR Dataset ](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones)
 * [TensorFlow Lite Micro Documentation](https://www.tensorflow.org/lite/microcontrollers)
 * [ISM330DHCX Datasheet (STMicroelectronics)](https://www.st.com/resource/en/datasheet/ism330dhcx.pdf)
